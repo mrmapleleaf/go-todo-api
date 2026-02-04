@@ -29,7 +29,16 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"message": "Hello, Go Todo API!"})
 	})
-	http.HandleFunc("/todos", h.GetAll)
+	http.HandleFunc("/todos", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			h.GetAll(w, r)
+		case http.MethodPost:
+			h.Create(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 
 	// 4. サーバーの起動
 	port := ":8080"

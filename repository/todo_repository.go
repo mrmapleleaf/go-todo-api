@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"go-todo-api/model"
+	"log"
 )
 
 type TodoRepository struct {
@@ -34,4 +35,20 @@ func (r *TodoRepository) GetAll() ([]model.Todo, error) {
 		todos = append(todos, todo)
 	}
 	return todos, nil
+}
+
+func (r *TodoRepository) Create(todo model.Todo) (int64, error) {
+	// プリペアードステートメントを使ってSQLインジェクションを防ぐ
+	query := "INSERT INTO todos (title, content) VALUES (?, ?)"
+
+	// Execはクエリを実行し、結果を返す
+	result, err := r.db.Exec(query, todo.Title, todo.Content)
+	if err != nil {
+		return 0, err
+	}
+
+	log.Println("result: ", result)
+
+	// 挿入されたレコードのIDを取得
+	return result.LastInsertId()
 }

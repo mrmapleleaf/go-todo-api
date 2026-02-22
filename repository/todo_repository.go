@@ -37,6 +37,7 @@ func (r *TodoRepository) GetAll() ([]model.Todo, error) {
 	return todos, nil
 }
 
+// Todoを新規作成する
 func (r *TodoRepository) Create(todo model.Todo) (int64, error) {
 	// プリペアードステートメントを使ってSQLインジェクションを防ぐ
 	query := "INSERT INTO todos (title, content) VALUES (?, ?)"
@@ -51,4 +52,18 @@ func (r *TodoRepository) Create(todo model.Todo) (int64, error) {
 
 	// 挿入されたレコードのIDを取得
 	return result.LastInsertId()
+}
+
+// IDに基づいてTodoを取得
+func (r *TodoRepository) GetByID(id int64) (*model.Todo, error) {
+	query := "SELECT id, title, content, done, created_at FROM todos WHERE id = ?"
+	// 1件だけ取得するため、QueryRowを使用
+	row := r.db.QueryRow(query, id)
+
+	var todo model.Todo
+	err := row.Scan(&todo.ID, &todo.Title, &todo.Content, &todo.Done, &todo.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &todo, nil
 }

@@ -25,7 +25,7 @@ func main() {
 
 	// 3. ルーティングの設定
 	// 第二引数にはハンドラー関数の「型」が一致するものを渡す
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request){
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"message": "Hello, Go Todo API!"})
 	})
@@ -37,6 +37,24 @@ func main() {
 			h.Create(w, r)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+	// URLパスが/todos/で始まるリクエストを処理するハンドラー
+	// 例: /todos/1, /todos/2など
+	http.HandleFunc("/todos/", func(w http.ResponseWriter, r *http.Request) {
+		// URLパスにIDがなければ、Todoの一覧取得や新規作成のハンドラーに処理を渡す
+		if r.URL.Path == "/todos/" || r.URL.Path == "/todos" {
+			switch r.Method {
+			case http.MethodGet:
+				h.GetAll(w, r)
+			case http.MethodPost:
+				h.Create(w, r)
+			default:
+				w.WriteHeader(http.StatusMethodNotAllowed)
+			}
+		} else {
+			// IDに基づくTodoの取得
+			h.GetByID(w, r)
 		}
 	})
 

@@ -5,6 +5,8 @@ import (
 	"go-todo-api/model"
 	"go-todo-api/repository"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type TodoHandler struct {
@@ -64,5 +66,38 @@ func (h *TodoHandler) Create(w http.ResponseWriter, r *http.Request) {
 	todo.ID = int(id)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(todo)
+}
+
+// IDに基づいてTodoを取得するハンドラー
+func (h *TodoHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	// 1. リクエストメソッドのチェック
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 2. クエリパラメータからIDを取得
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 3 {
+		http.Error(w, "IDが指定されていません", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(pathParts[2])
+	if err != nil {
+	http.Error(w, "無効なID", http.StatusBadRequest)
+		return
+	}
+
+	// 3. Todoの取得
+	todo, err := h.repo.GetByID(int64(id))
+	if err != nil {
+		http.Error(w, "Todoが見つかりません", http.StatusNotFound)
+		return
+	}
+
+	// 4. レスポンスの返却
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(todo)
 }

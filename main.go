@@ -54,7 +54,16 @@ func main() {
 			}
 		} else {
 			// IDに基づくTodoの取得
-			h.GetByID(w, r)
+			switch r.Method {
+			case http.MethodGet:
+				h.GetByID(w, r)
+			case http.MethodPut:
+				h.Update(w, r)
+			case http.MethodDelete:
+				h.Delete(w, r)
+			default:
+				w.WriteHeader(http.StatusMethodNotAllowed)
+			}
 		}
 	})
 

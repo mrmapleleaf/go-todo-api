@@ -67,3 +67,17 @@ func (r *TodoRepository) GetByID(id int64) (*model.Todo, error) {
 	}
 	return &todo, nil
 }
+
+// Todoを更新する
+func (r *TodoRepository) Update(todo model.Todo) error {
+	query := "UPDATE todos SET title = ?, content = ?, done = ? WHERE id = ?"
+	_, err := r.db.Exec(query, todo.Title, todo.Content, todo.Done, todo.ID)
+	return err
+}
+
+// Todoを削除する
+func (r *TodoRepository) Delete(id int64) error {
+	query := "DELETE FROM todos WHERE id = ?"
+	_, err := r.db.Exec(query, id)
+	return err
+}

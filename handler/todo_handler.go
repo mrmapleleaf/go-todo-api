@@ -101,3 +101,70 @@ func (h *TodoHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(todo)
 }
+
+// IDに基づいてTodoを更新するハンドラー
+func (h *TodoHandler) Update(w http.ResponseWriter, r *http.Request) {
+	// 1. リクエストメソッドのチェック
+	if r.Method != http.MethodPut {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 2. クエリパラメータからIDを取得
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 3 {
+		http.Error(w, "IDが指定されていません", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(pathParts[2])
+	if err != nil {
+		http.Error(w, "無効なID", http.StatusBadRequest)
+		return
+	}
+
+	// 3. リクエストボディのパース
+	var todo model.Todo
+	// リクエストボディをJSONデコードしてtodo構造体に格納
+	if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
+		http.Error(w, "無効なリクエストボディ", http.StatusBadRequest)
+		return
+	}
+	todo.ID = id
+
+	if err := h.repo.Update(todo); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// IDに基づいてTodoを削除するハンドラー
+func (h *TodoHandler) Delete(e http.ResponseWriter, r *http.Request) {
+	// 1. リクエストメソッドのチェック
+	if r.Method != http.MethodDelete {
+		e.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 2. クエリパラメータからIDを取得
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 3 {
+		http.Error(e, "IDが指定されていません", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(pathParts[2])
+	if err != nil {
+		http.Error(e, "無効なID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.Delete(int64(id)); err != nil {
+		http.Error(e, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	e.WriteHeader(http.StatusNoContent)
+}
